@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Crypto Prices from DEXs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+    }
+    .highlight-low {
+      background-color: red;
+      color: white;
+    }
+    .highlight-high {
+      background-color: green;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Live Cryptocurrency Prices from DEXs</h1>
+  <table id="priceTable">
+    <thead>
+      <tr>
+        <th>DEX</th>
+        <th>ETH Price (USD)</th>
+        <th>MATIC Price (USD)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Prices will be dynamically inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    // List of exchanges to fetch prices from CoinGecko API
+    const exchanges = [
+      { name: 'Uniswap', ethUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', maticUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd' },
+      { name: 'SushiSwap', ethUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', maticUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd' },
+      { name: 'PancakeSwap', ethUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', maticUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd' },
+      { name: 'Matcha', ethUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', maticUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd' },
+      // Add more DEXs here
+    ];
+
+    // Function to fetch prices from CoinGecko API and update the table
+    async function fetchPrices() {
+      const priceTable = document.getElementById('priceTable').getElementsByTagName('tbody')[0];
+      const priceData = [];
+
+      // Fetch price data for each exchange
+      for (const exchange of exchanges) {
+        const ethResponse = await fetch(exchange.ethUrl);
+        const maticResponse = await fetch(exchange.maticUrl);
+        
+        const ethData = await ethResponse.json();
+        const maticData = await maticResponse.json();
+        
+        const ethPrice = ethData.ethereum?.usd || 0;
+        const maticPrice = maticData['matic-network']?.usd || 0;
+
+        priceData.push({
+          name: exchange.name,
+          ethPrice,
+          maticPrice
+        });
+      }
+
+      // Sort prices by the lowest and highest for both ETH and MATIC
+      priceData.sort((a, b) => a.ethPrice - b.ethPrice);
+
+      // Clear existing table rows
+      priceTable.innerHTML = '';
+
+      // Create table rows for each exchange
+      priceData.forEach((exchange, index) => {
+        const row = priceTable.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
+
+        cell1.textContent = exchange.name;
+        cell2.textContent = `$${exchange.ethPrice.toFixed(4)}`;
+        cell3.textContent = `$${exchange.maticPrice.toFixed(4)}`;
+
+        // Highlight the lowest and highest prices for ETH and MATIC
+        if (index === 0) {
+          row.classList.add('highlight-low');
+        } else if (index === priceData.length - 1) {
+          row.classList.add('highlight-high');
+        }
+      });
+    }
+
+    // Set interval to update prices every 2 seconds
+    setInterval(fetchPrices, 2000);
+
+    // Initial fetch when the page loads
+    fetchPrices();
+  </script>
+
+</body>
+</html>
